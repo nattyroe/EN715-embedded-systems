@@ -3,18 +3,21 @@
 class MorseCode
 {
 public:
+    static const int UNIT = 250;
     enum length
     {
         NA = 0,
-        BLINK = 100,
-        SHORT = 200,
-        GAP = 300,
-        LONG = 600
+        BLINK = UNIT,
+        SHORT = UNIT,
+        GAP = 3 * UNIT,
+        LONG = 3 * UNIT,
+        SPACE = 7 * UNIT
     };
 
-    static const int ARRAY_LENGTH = 37;
     static const int MAX_MORSE_LENGTH = 5;
-    static const int BAD_VALUE = 36;
+    static const int ARRAY_LENGTH = 38;
+    static const int SPACE_VALUE = 36;
+    static const int BAD_VALUE = 37;
 
     MorseCode::length alphabet[ARRAY_LENGTH][MAX_MORSE_LENGTH] = {
         {LONG, LONG, LONG, LONG, LONG},      // 0
@@ -53,6 +56,7 @@ public:
         {LONG, SHORT, SHORT, LONG, NA},      // X
         {LONG, SHORT, LONG, LONG, NA},       // Y
         {LONG, LONG, SHORT, SHORT, NA},      // Z
+        {SPACE, NA, NA, NA, NA},             // SPACE
         {NA, NA, NA, NA, NA}                 // BAD VALUE
     };
 
@@ -70,6 +74,10 @@ public:
         else if (letter >= 'a' && letter <= 'z')
         {
             charVal = charVal - int('a') + 10;
+        }
+        else if (letter == ' ')
+        {
+            charVal = SPACE_VALUE;
         }
         else
         {
