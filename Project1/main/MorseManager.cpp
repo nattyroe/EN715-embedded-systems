@@ -39,6 +39,11 @@ bool MorseManager::ledChangeNeeded(const unsigned long currentMillis)
             this->onBlink = false;
             this->blinkIdx = 0;
             this->nextUpdateTime = currentMillis + *morseCode->get(message[currentLineIndex], blinkIdx);
+            if (currentMillis == this->nextUpdateTime)
+            {
+                this->onBlink = true;
+                return false;
+            }
             return true;
         }
     }

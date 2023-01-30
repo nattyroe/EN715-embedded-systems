@@ -9,14 +9,12 @@ public:
         BLINK = 100,
         SHORT = 200,
         GAP = 300,
-        LONG = 600,
-        // SPACE = 750
+        LONG = 600
     };
 
-    // static const int ARRAY_LENGTH = 38;
     static const int ARRAY_LENGTH = 37;
     static const int MAX_MORSE_LENGTH = 5;
-    static const int SPACE_IDX = 36;
+    static const int BAD_VALUE = 36;
 
     MorseCode::length alphabet[ARRAY_LENGTH][MAX_MORSE_LENGTH] = {
         {LONG, LONG, LONG, LONG, LONG},      // 0
@@ -55,8 +53,7 @@ public:
         {LONG, SHORT, SHORT, LONG, NA},      // X
         {LONG, SHORT, LONG, LONG, NA},       // Y
         {LONG, LONG, SHORT, SHORT, NA},      // Z
-        // {SPACE, NA, NA, NA, NA},             // SPACE
-        {NA, NA, NA, NA, NA} // BAD VALUE
+        {NA, NA, NA, NA, NA}                 // BAD VALUE
     };
 
     MorseCode::length *get(char letter, unsigned int idx)
@@ -74,13 +71,9 @@ public:
         {
             charVal = charVal - int('a') + 10;
         }
-        // else if (letter == ' ')
-        // {
-        //     charVal = SPACE_IDX;
-        // }
         else
         {
-            charVal = ARRAY_LENGTH;
+            charVal = BAD_VALUE;
         }
 
         return &alphabet[charVal][idx];
