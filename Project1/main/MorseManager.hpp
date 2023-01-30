@@ -9,19 +9,19 @@ class MorseManager
 
 public:
     MorseManager(){};
-    bool ledChangeNeeded(const unsigned long currentMillis);
 
     void addLine(const char *line, unsigned int length);
 
+    bool ledChangeNeeded(const unsigned long currentMillis);
+
     bool printComplete();
+
+    unsigned long getNextUpdateTime() { return this->nextUpdateTime; };
     unsigned int getLineLength() { return sizeof(this->message) / sizeof(char); };
     unsigned int getCurrentLineLength() { return this->currentLineLength; };
-    unsigned long getNextUpdateTime() { return this->nextUpdateTime; };
     unsigned int getCurrentLineIndex() { return this->currentLineIndex; };
-    unsigned int getBlinkIdx() { return this->blinkIdx; };
-    char getCurrentChar() { return this->message[this->currentLineIndex]; };
-    unsigned int getCurrentDuration() { return *morseCode->get(message[currentLineIndex], blinkIdx); };
     bool getOnBlink() { return this->onBlink; };
+    unsigned int getBlinkIdx() { return this->blinkIdx; };
 
 private:
     MorseCode *morseCode = new MorseCode();
