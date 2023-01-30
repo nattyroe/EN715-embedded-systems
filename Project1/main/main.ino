@@ -1,25 +1,23 @@
 
 #include "MorseManager.hpp"
 
-const int ledPin = LED_BUILTIN; // the number of the LED pin
-unsigned long previousMillis = 0;
-
+const int ledPin = LED_BUILTIN;
 int ledState = LOW;
-const unsigned long interval = 1000;
 
 const unsigned int MAX_LINE_LENGTH = 20;
 unsigned int linePosition = 0;
 static char message[MAX_LINE_LENGTH];
 const char *m = message;
-char startChar;
+
+const int CTRL_C = 3;
+const int CTRL_Z = 26; 
 
 MorseManager *morseManager = new MorseManager();
 
 void setup()
 {
-    Serial.begin(9600);
     pinMode(ledPin, OUTPUT);
-    startChar = Serial.read();
+    Serial.begin(9600);
 }
 
 void loop()
@@ -38,11 +36,17 @@ void inputLoop()
         {
             morseManager->addLine(m, linePosition);
             linePosition = 0;
+            Serial.println(" Playing");
             break;
         }
-        else if (linePosition < MAX_LINE_LENGTH  && readByte != startChar)
+        else if (readByte == CTRL_Z || readByte == CTRL_C)
+        {
+          exit(0);
+        }
+        else if (linePosition < MAX_LINE_LENGTH  && readByte >= 0)
         {
             message[linePosition++] = readByte;
+            Serial.print(message[linePosition-1]);
         }
     }
 }
@@ -53,7 +57,6 @@ void blinkLoop()
     {   
         if (morseManager->ledChangeNeeded(millis()))
         {
-            // if the LED is off turn it on and vice-versa
             changeLedState();
         }
         
