@@ -3,13 +3,14 @@
 
 bool MorseManager::ledChangeNeeded(const unsigned long currentMillis)
 {
+    bool changeNeeded = false;
     if (currentMillis > this->nextUpdateTime)
     {
         if (!onBlink)
         {
             this->onBlink = true;
             this->nextUpdateTime = currentMillis + MorseCode::length::BLINK;
-            return true;
+            changeNeeded = true;
         }
         else if (onBlink && this->blinkIdx < MorseCode::MAX_MORSE_LENGTH - 1)
         {
@@ -22,9 +23,12 @@ bool MorseManager::ledChangeNeeded(const unsigned long currentMillis)
             if (currentMillis == this->nextUpdateTime)
             {
                 this->onBlink = true;
-                return false;
+                changeNeeded = false;
             }
-            return true;
+            else
+            {
+                changeNeeded = true;
+            }
         }
         else if (this->blinkIdx == MorseCode::MAX_MORSE_LENGTH - 1)
         {
@@ -32,7 +36,7 @@ bool MorseManager::ledChangeNeeded(const unsigned long currentMillis)
             ++this->currentLineIndex;
             ++this->blinkIdx;
             this->nextUpdateTime = currentMillis + MorseCode::length::GAP;
-            return false;
+            changeNeeded = false;
         }
         else if (this->currentLineIndex < currentLineLength)
         {
@@ -42,12 +46,19 @@ bool MorseManager::ledChangeNeeded(const unsigned long currentMillis)
             if (currentMillis == this->nextUpdateTime)
             {
                 this->onBlink = true;
-                return false;
+                changeNeeded = false;
             }
-            return true;
+            else
+            {
+                changeNeeded = true;
+            }
         }
     }
-    return false;
+    if (message[currentLineIndex] == ' ')
+    {
+        changeNeeded = false;
+    }
+    return changeNeeded;
 }
 
 void MorseManager::addLine(const char *line, unsigned int length)
