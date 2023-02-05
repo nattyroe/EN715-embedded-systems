@@ -1,9 +1,18 @@
 #pragma once
 
+// Define timing and blink sequences for Morse Code
+//
+// Defines timing base off of variable UNIT, and provides
+// blink sequences in sets of 5 (longest Morse Code pattern).
+// the function 'get' provides the blink duration for
+// a character and a sequence position (0-4), where
+// an N/A (0) means the Morse sequence is complete
 class MorseCode
 {
 public:
+    // Defines single Morse Unit in ms
     static const int UNIT = 250;
+    // Define Morse Code durations based on Unit
     enum length
     {
         NA = 0,
@@ -14,11 +23,13 @@ public:
         SPACE = 7 * UNIT
     };
 
+    // Define aspects of the alphabet
     static const int MAX_MORSE_LENGTH = 5;
     static const int ARRAY_LENGTH = 38;
     static const int SPACE_VALUE = 36;
     static const int BAD_VALUE = 37;
 
+    // Array defining Morse Code Sequences for each Character
     MorseCode::length alphabet[ARRAY_LENGTH][MAX_MORSE_LENGTH] = {
         {LONG, LONG, LONG, LONG, LONG},      // 0
         {SHORT, LONG, LONG, LONG, LONG},     // 1
@@ -60,8 +71,15 @@ public:
         {NA, NA, NA, NA, NA}                 // BAD VALUE
     };
 
+    // Function for getting Morse Code blink duration for
+    // a Character and sequence position
     MorseCode::length *get(char letter, unsigned int idx)
     {
+        if (idx >= MAX_MORSE_LENGTH)
+        {
+            return &alphabet[BAD_VALUE][idx];
+        }
+
         int charVal = int(letter);
         if (letter >= '0' && charVal <= '9')
         {
