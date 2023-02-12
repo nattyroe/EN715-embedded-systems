@@ -1,4 +1,8 @@
-
+/*
+ * Timer Resources - for future reference
+ * https://microcontrollerslab.com/arduino-timer-interrupts-tutorial/
+ * https://www.best-microcontroller-projects.com/arduino-timer-interrupt.html
+ */
 #include <SoftwareSerial.h>
 
 // I/O Data
@@ -27,6 +31,8 @@ ISR(TIMER1_COMPA_vect) {
     logAvgTemp();
 }
 
+// Set up interrupt info and calculate coffecients for temp
+// sensor callibration allowing for easy updates in solveSteinhartHart()
 void setup() {
     // put your setup code here, to run once:
     Serial.begin(9600);
@@ -57,6 +63,7 @@ void setup() {
     TIMSK1 = (1<<OCIE1A);
 }
 
+// Continuously update rolling pin read average
 void loop() {
     // Keep rolling average of input pin read value
     prevAvg = avgTempVal * tempCount;
@@ -67,21 +74,11 @@ void loop() {
     interrupts();
 }
 
-float tempValToFarenheit(unsigned int tempVal)
-{
-    float measVoltage = ((1023.0 - tempVal)/ 1023.0) * inputVoltage;
-    float measReistance = (measVoltage / inputVoltage) * resistanceUsed_ohm / (1 - (measVoltage / inputVoltage));
-//    Serial.println(measReistance);
-    // Steinhart-Hart Equation
-    float lnTemp = log(measReistance);
-    float inverseTempK = SH_A + (SH_B * lnTemp) + (SH_C * lnTemp * lnTemp * lnTemp);
-    return kelvinToFarenheit(1 / inverseTempK);
-}
-
+// Log current average temp to Serial bus
 void logAvgTemp()
 {
     if (logNow){
-        Serial.print(millis()/1000);
+        Serial.print(millis()/1000.);
         Serial.print(", ");
         Serial.print(tempValToFarenheit(avgTempVal));
         Serial.print("\n");
@@ -92,24 +89,32 @@ void logAvgTemp()
     logNow = !logNow;
 }
 
-// Pull logger interrupt low
-void resetLogger() {
-    digitalWrite(logResetPin, LOW);
-    delay(10);
-    digitalWrite(logResetPin, HIGH);
+// Convert an Analog Pin read value to a temperature
+float tempValToFarenheit(unsigned int tempVal)
+{
+    float measVoltage = ((1023.0 - tempVal)/ 1023.0) * inputVoltage;
+    float measReistance = (measVoltage / inputVoltage) * resistanceUsed_ohm / (1 - (measVoltage / inputVoltage));
+    // Steinhart-Hart Equation
+    float lnTemp = log(measReistance);
+    float inverseTempK = SH_A + (SH_B * lnTemp) + (SH_C * lnTemp * lnTemp * lnTemp);
+    return kelvinToFarenheit(1 / inverseTempK);
 }
 
+// Convert Temperature from Kelvin to Farenheit
 float kelvinToFarenheit(float tKelvin) {
     return ((tKelvin + KtoC) * 9 / 5.0) + 32;
 }
 
+// Convert Temperature from Farenheit to Kelvin
 float farenheitToKelvin(float tFarenheit) {
     return ((tFarenheit - 32.0) * 5 / 9.0) - KtoC;
 }
 
+// Use three Temp/Resistance Pairs to calibrate thermistor
 void solveSteinhartHart()
 {
-    // Calibration Temperatures
+    // Set Calibration Pairs - Measure Resistance (Ohms) of
+    // thermistor at three different Temperatures (Kelvin) 
 //    float R1 = 6900;
     float R1 = 5500;
     float T1 = farenheitToKelvin(98);
@@ -130,4 +135,12 @@ void solveSteinhartHart()
     SH_C = ((gamma3 - gamma2) / (L3 - L2)) / (L1 + L2 + L3);
     SH_B = gamma2 - (SH_C * ((L1*L1) + (L1*L2) + (L2*L2)));
     SH_A = Y1 - ((SH_B + (L1*L1*SH_C))*L1);
+}
+
+// Reset Logger to create new log file
+void resetLogger() {
+    // Pull logger interrupt low
+    digitalWrite(logResetPin, LOW);
+    delay(10);
+    digitalWrite(logResetPin, HIGH);
 }
