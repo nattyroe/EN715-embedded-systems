@@ -1,16 +1,17 @@
 
 #include <SoftwareSerial.h>
 
+// I/O Data
 const int thermistorPin = A0;
-unsigned long avgTempVal = 0;
-unsigned int tempCount = 0;
-
 //const int rxPin = 0; // Currently unused
 const int txPin = 1;
 const int logResetPin = 2;
 //const int interruptPin = 3;
 
 // Temperature Data
+unsigned int avgTempVal = 0;
+float tempCount = 0;
+long prevAvg = 0;
 const int KtoC = -273.15;
 float SH_A = 0;
 float SH_B = 0;
@@ -58,9 +59,12 @@ void setup() {
 
 void loop() {
     // Keep rolling average of input pin read value
-    double prevAvg = avgTempVal * tempCount;
-    ++tempCount;
-    avgTempVal = (prevAvg + analogRead(thermistorPin)) / (float) tempCount;
+    prevAvg = avgTempVal * tempCount;
+    unsigned int newTempVal = analogRead(thermistorPin);
+    // Protect against interrupt causing div-by-0 error
+    noInterrupts();
+    avgTempVal = (prevAvg + newTempVal) / ++tempCount;
+    interrupts();
 }
 
 float tempValToFarenheit(unsigned int tempVal)
@@ -83,6 +87,7 @@ void logAvgTemp()
         Serial.print("\n");
         avgTempVal = 0;
         tempCount = 0;
+        prevAvg = 0;
     }
     logNow = !logNow;
 }
