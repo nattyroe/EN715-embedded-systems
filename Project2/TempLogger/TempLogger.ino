@@ -5,9 +5,6 @@ const int thermistorPin = A0;
 unsigned long avgTempVal = 0;
 unsigned int tempCount = 0;
 
-unsigned long logInterval = 10000;
-unsigned long nextLogTime = millis() + logInterval;
-
 //const int rxPin = 0; // Currently unused
 const int txPin = 1;
 const int logResetPin = 2;
@@ -23,6 +20,12 @@ float SH_C = 0;
 const float inputVoltage = 5.0;
 const float resistanceUsed_ohm = 10000.0;
 
+// Interrupt Data
+bool logNow = false;
+ISR(TIMER1_COMPA_vect) {
+    logAvgTemp();
+}
+
 void setup() {
     // put your setup code here, to run once:
     Serial.begin(9600);
@@ -34,23 +37,37 @@ void setup() {
 
     solveSteinhartHart();
 
+    /*
+     * Uses Compare-Match interrupt with max compare value FFFF
+     * This is equivalent to doing overflow - overflow would have
+     * TIMER1_COMPA_vect replaced with TIMER1_OVF_vect
+     * and OCIE1A replaced with TOIE1
+     */
+    // Reset Timer 1 Registers
+    TCCR1A = 0;
+    TCCR1B = 0;
+    // Set Timer 1 compare value to max
+    OCR1A = 0xFFFF;
+    // Set Timer 1 to prescaler 1024
+    TCCR1B = (1<<CS12) | (1<<CS10);
+    // Set for comparison to OCR1A
+    TCCR1B = TCCR1B | (1<<WGM12);
+    // Set Timer 1 to use compare match
+    TIMSK1 = (1<<OCIE1A);
 }
 
 void loop() {
+    // Keep rolling average of input pin read value
     double prevAvg = avgTempVal * tempCount;
     ++tempCount;
     avgTempVal = (prevAvg + analogRead(thermistorPin)) / (float) tempCount;
-
-    if (millis() > nextLogTime){
-        logAvgTemp();
-    }
 }
 
 float tempValToFarenheit(unsigned int tempVal)
 {
     float measVoltage = ((1023.0 - tempVal)/ 1023.0) * inputVoltage;
     float measReistance = (measVoltage / inputVoltage) * resistanceUsed_ohm / (1 - (measVoltage / inputVoltage));
-    Serial.println(measReistance);
+//    Serial.println(measReistance);
     // Steinhart-Hart Equation
     float lnTemp = log(measReistance);
     float inverseTempK = SH_A + (SH_B * lnTemp) + (SH_C * lnTemp * lnTemp * lnTemp);
@@ -59,13 +76,15 @@ float tempValToFarenheit(unsigned int tempVal)
 
 void logAvgTemp()
 {
-    Serial.print(millis()/1000);
-    Serial.print(", ");
-    Serial.print(tempValToFarenheit(avgTempVal));
-    Serial.print("\n");
-    avgTempVal = 0;
-    tempCount = 0;
-    nextLogTime = millis() + logInterval;
+    if (logNow){
+        Serial.print(millis()/1000);
+        Serial.print(", ");
+        Serial.print(tempValToFarenheit(avgTempVal));
+        Serial.print("\n");
+        avgTempVal = 0;
+        tempCount = 0;
+    }
+    logNow = !logNow;
 }
 
 // Pull logger interrupt low
