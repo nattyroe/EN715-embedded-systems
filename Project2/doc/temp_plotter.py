@@ -19,14 +19,20 @@ for file in file_list:
     # Read in CSV data
     vals = pd.read_csv(file, header=None, names=[x_axis_label, y_axis_label])
 
+    temp_copy = vals[y_axis_label].copy(deep=True)
+    temp_copy[temp_copy > 100] = 100.0
+    temp_copy[temp_copy < 0] = 0.0
+
     # Set up color array - 0F->#0000FF, 100F->#FF0000
     reds = np.array(['0x{:02x}'.format(int(255*temp/100))
-                     for temp in vals[y_axis_label]])
-    reds[vals[y_axis_label] >= 100] = "0xFF"
+                     for temp in temp_copy])
+    reds[vals[y_axis_label] >= 100] = "0xff"
+    reds[vals[y_axis_label] <= 0] = "0x00"
 
     blues = np.array(['0x{:02x}'.format(int(255 - (255*temp/100)))
-                      for temp in vals[y_axis_label]])
-    blues[vals[x_axis_label] <= 0] = "0xFF"
+                      for temp in temp_copy])
+    blues[vals[x_axis_label] <= 0] = "0xff"
+    blues[vals[y_axis_label] >= 100] = "0x00"
 
     colors = [
         f'#{reds[idx].split("x")[1]}00{blues[idx].split("x")[1]}' for idx in range(len(reds))]
