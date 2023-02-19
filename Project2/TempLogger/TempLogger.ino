@@ -13,9 +13,9 @@ const int logResetPin = 2;
 //const int interruptPin = 3;
 
 // Temperature Data
-unsigned int avgTempVal = 0;
-float tempCount = 0;
-long prevAvg = 0;
+volatile unsigned int avgTempVal = 0;
+volatile float tempCount = 0;
+volatile long prevAvg = 0;
 const int KtoC = -273.15;
 float SH_A = 0;
 float SH_B = 0;
@@ -114,8 +114,7 @@ float farenheitToKelvin(float tFarenheit) {
 void solveSteinhartHart()
 {
     // Set Calibration Pairs - Measure Resistance (Ohms) of
-    // thermistor at three different Temperatures (Kelvin) 
-//    float R1 = 6900;
+    // thermistor at three different Temperatures (Kelvin)
     float R1 = 5500;
     float T1 = farenheitToKelvin(98);
     float R2 = 13000;
